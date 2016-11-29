@@ -91,10 +91,10 @@ int main(int argc, char** argv){
 
 
   //Initialising the theta map
-  TH3D* T3DMap = new TH3D("Edep","Edep",512,0,20,50,0,33,50,0,33);
-  TH3D* Theta3DMap = new TH3D("Theta3DMap","Theta binned [-.5,.5]", 50, 0.,33., 50, 0.,33., 50, -.5, .5);
-  TH2D* Integral       = new TH2D("Integral","Weighted Mean Integral",50,0,33,50,0,33);
-  TH2D* weights        = new TH2D("weights","Weights",50,0,33,50,0,33);
+  TH3D* T3DMap = new TH3D("Edep","Edep",512,0,20,200,0,15,200,0,15);
+  TH3D* Theta3DMap = new TH3D("Theta3DMap","Theta binned [-.5,.5]", 200, 0.,15., 200, 0.,15., 50, -.5, .5);
+  TH2D* Integral       = new TH2D("Integral","Weighted Mean Integral",200,0,15,200,0,15);
+  TH2D* weights        = new TH2D("weights","Weights",200,0,15,200,0,15);
   
 
   std::string line;
@@ -121,8 +121,8 @@ int main(int argc, char** argv){
     transform(Point.tracks_X->begin(), Point.tracks_X->end(), Point.tracks_X->begin(), bind1st(multiplies<double>(),0.1));
     transform(Point.tracks_X->begin(), Point.tracks_X->end(), Point.tracks_X->begin(), bind2nd(plus<double>(), 10.0));
     
-    Point.x0 = 0.1*Point.x0+10.; Point.y0 = 0.1*Point.y0+16.5; Point.z0 = 0.1*Point.z0+16.5;
-    Point.x1 = 0.1*Point.x1+10.; Point.y1 = 0.1*Point.y1+16.5; Point.z1 = 0.1*Point.z1+16.5;
+    Point.x0 = 0.1*Point.x0+10.; Point.y0 = 0.1*Point.y0+7.5; Point.z0 = 0.1*Point.z0+7.5;
+    Point.x1 = 0.1*Point.x1+10.; Point.y1 = 0.1*Point.y1+7.5; Point.z1 = 0.1*Point.z1+7.5;
 
     
     //Cuts
@@ -173,7 +173,7 @@ double findWET(double Einit,double Estop){
 // Compute Spline
 ////////////////////////////////////////////
  
-void ComputeSpline(Proton *Point, TH3D* T3DMap, TH2D* mean_squared, TH2D* weights, TH2D* mean_squared2, TH2D* weights2, TH2D* variance, TH2D* Integral, TProfile2D* Angle){
+void ComputeSpline(Proton *Point, TH3D* T3DMap, TH2D* Integral, TH2D* weights){
   TVector3 P0(Point->px0,Point->py0,Point->pz0);
   TVector3 P1(Point->px1,Point->py1,Point->pz1);
   TVector3 X0(Point->x0,Point->y0,Point->z0);
@@ -236,7 +236,7 @@ void ComputeSpline(Proton *Point, TH3D* T3DMap, TH2D* mean_squared, TH2D* weight
      
     integral    = (pv2 + pv1)*IntStep/2;
     pv1 	= pv2;
-    TotInt     += integral
+    TotInt     += integral;
       
     
     //Mapping the length crossed in each column
@@ -245,19 +245,18 @@ void ComputeSpline(Proton *Point, TH3D* T3DMap, TH2D* mean_squared, TH2D* weight
     if ( !ret.second ) Lengthmap[bin2dID]  += L;
     TotL+=L;      
 
-    }
+  }
     
-    //Weighting the integral
-    std::map<pair<int,int>,double>::iterator it;
-    for(it = Lengthmap.begin(); it != Lengthmap.end(); it++){
-      biny = it->first.first;
-      binz = it->first.second;
-      double L = it->second;
-      double y = T3DMap->GetYaxis()->GetBinCenter(biny);
-      double z = T3DMap->GetZaxis()->GetBinCenter(binz);
-      Integral->Fill(y,z,TotInt*L/TotL);
-      weights->Fill(y,z,L/TotL);
-    }
+  //Weighting the integral
+  std::map<pair<int,int>,double>::iterator it;
+  for(it = Lengthmap.begin(); it != Lengthmap.end(); it++){
+    biny = it->first.first;
+    binz = it->first.second;
+    double L = it->second;
+    double y = T3DMap->GetYaxis()->GetBinCenter(biny);
+    double z = T3DMap->GetZaxis()->GetBinCenter(binz);
+    Integral->Fill(y,z,TotInt*L/TotL);
+    weights->Fill(y,z,L/TotL);
   }
 }
 
